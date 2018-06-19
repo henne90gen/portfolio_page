@@ -8,7 +8,12 @@
 </head>
 
 <body>
-    {% block sidebar %}<!-- insert default navigation text for every page -->{% endblock %}
+    {% block sidebar %}
+        {% for repo in repos %}
+        {% url 'project' repo.name as project_url %}
+            <a href="{{ project_url }}">{{ repo.name }}</a>
+        {% endfor %}
+    {% endblock %}
     {% block content %}<!-- default content text (typically empty) -->{% endblock %}
 </body>
 </html>
