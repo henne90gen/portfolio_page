@@ -19,7 +19,7 @@ def client(app: Flask):
 
 def test_generate_index(app: Flask):
     repos = {}
-    github_api.get_repos = lambda: repos
+    github_api.get_repositories = lambda: repos
     with app.app_context():
         result = generate_index()
         print(result)
