@@ -1,6 +1,42 @@
+import os
 import requests
-from typing import List
+import typing
+from typing import List, Optional, Union, Callable, Any
 from dataclasses import dataclass
+import pickle
+
+GITHUB_USERNAME = "henne90gen"
+cache_directory = "cache"
+repo_cache_path = "cache/repositories.pickle"
+readme_cache_path = "cache/readme_{}.pickle"
+
+
+def cache(path_or_path_func: Union[str, Callable[[Any], str]]):
+    """
+    This decorator caches the result of a function in a file.
+    The decorated function is only executed the very first time.
+    Any further calls will return the cached result.
+    """
+    def wrapper(func):
+        def inner(*args, **kwargs):
+            if not os.path.exists(cache_directory):
+                os.mkdir(cache_directory)
+
+            path = path_or_path_func
+            if callable(path_or_path_func):
+                path = path_or_path_func(*args, **kwargs)
+
+            if not os.path.exists(path):
+                result = func(*args, **kwargs)
+                with open(path, 'wb+') as f:
+                    pickle.dump(result, f)
+            else:
+                with open(path, 'rb') as f:
+                    result = pickle.load(f)
+
+            return result
+        return inner
+    return wrapper
 
 
 @dataclass
@@ -111,8 +147,27 @@ def dict_to_repository(d: dict) -> Repository:
     return Repository(**d)
 
 
+@cache(repo_cache_path)
 def get_repositories() -> List[Repository]:
-    r = requests.get('https://api.github.com/users/henne90gen')
+    r = requests.get(f"https://api.github.com/users/{GITHUB_USERNAME}")
     data = r.json()
     r = requests.get(data['repos_url'])
-    return list(map(dict_to_repository, r.json()))
+    data = r.json()
+
+    return list(map(dict_to_repository, data))
+
+
+def _get_readme_cache_path(repo: Repository):
+    return readme_cache_path.format(repo.name)
+
+
+@cache(_get_readme_cache_path)
+def get_readme(repo: Repository) -> Optional[str]:
+    r = requests.get(f"{repo.url}/readme")
+    if not r.ok:
+        print("Could not find README")
+        return None
+
+    data = r.json()
+    r = requests.get(data['download_url'])
+    return r.text
