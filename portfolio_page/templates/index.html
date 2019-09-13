@@ -67,11 +67,11 @@
     </head>
     <body style="display: flex">
         <div class="card-container">
-            {% for repo in repos %}
+            {% for project in projects %}
             <div class="card">
-                <h1 class="card-title">{{ repo.name }}</h1>
+                <h1 class="card-title">{{ project.title }}</h1>
                 <p class="card-content">
-                    {{ short_descriptions[repo.name] }}
+                    {{ project.short_description }}
                 </p>
             </div>
             {% endfor %}

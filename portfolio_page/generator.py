@@ -4,20 +4,31 @@ from flask import render_template
 
 from . import github_api
 
+@dataclass
+class Project:
+    title: str
+    short_description: str = ""
 
-def get_first_paragraph(readme: Optional[str]):
+
+def create_project(repo: github_api.Repository) -> Project:
+    readme = github_api.get_readme(repo)
+    project = Project(repo.name)
     if readme is None:
-        return "No README available"
+        project.short_description = "No README available"
+        return project
 
     lines = readme.split("\n")
     result = []
     for line in lines:
         if line.startswith('##'):
             break
-        if line.startswith('#'):
+        if line.startswith('# '):
+            project.title = line[2:]
             continue
         result.append(line)
-    return "\n".join(result)
+
+    project.short_description = "\n".join(result)    
+    return project
 
 
 def remove_forks(repo: github_api.Repository) -> bool:
@@ -27,12 +38,8 @@ def remove_forks(repo: github_api.Repository) -> bool:
 def create_landing_page():
     repos = list(filter(remove_forks, github_api.get_repositories()))
 
-    short_descriptions = {}
-    for repo in repos:
-        readme = github_api.get_readme(repo)
-        short_descriptions[repo.name] = get_first_paragraph(readme)
-
-    context = {'repos': repos, 'short_descriptions': short_descriptions}
+    projects = list(map(create_project, repos))
+    context = {'projects': projects}
     return render_template('index.html', **context)
 
 

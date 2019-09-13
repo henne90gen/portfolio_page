@@ -165,7 +165,6 @@ def _get_readme_cache_path(repo: Repository):
 def get_readme(repo: Repository) -> Optional[str]:
     r = requests.get(f"{repo.url}/readme")
     if not r.ok:
-        print("Could not find README")
         return None
 
     data = r.json()
