@@ -33,11 +33,14 @@
                 height: 400px;
                 padding: 30px;
                 background-color: green;
-                /* TODO round corners */
-                /* TODO box shadow */
+                box-shadow: 10px 10px 1px gray;
+                border-radius: 10px;
 
                 /* this is needed for the gradient inside the card-content to work */
                 position: relative;
+            }
+            .card:hover {
+                z-index: 10;
             }
             @media (max-width: 585px) {
                 .card {
@@ -58,6 +61,7 @@
                 top: 0;
                 pointer-events: none;
                 background: linear-gradient(transparent 200px, green);
+                border-radius: 10px;
             }
             .card-title {
                 overflow: hidden;
