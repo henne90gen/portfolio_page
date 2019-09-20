@@ -1,42 +1,13 @@
-import os
 import requests
 import typing
-from typing import List, Optional, Union, Callable, Any
+from typing import List, Optional
 from dataclasses import dataclass
-import pickle
+
+from .helper import cache, report_error
 
 GITHUB_USERNAME = "henne90gen"
-cache_directory = "cache"
-repo_cache_path = "cache/repositories.pickle"
-readme_cache_path = "cache/readme_{}.pickle"
-
-
-def cache(path_or_path_func: Union[str, Callable[[Any], str]]):
-    """
-    This decorator caches the result of a function in a file.
-    The decorated function is only executed the very first time.
-    Any further calls will return the cached result.
-    """
-    def wrapper(func):
-        def inner(*args, **kwargs):
-            if not os.path.exists(cache_directory):
-                os.mkdir(cache_directory)
-
-            path = path_or_path_func
-            if callable(path_or_path_func):
-                path = path_or_path_func(*args, **kwargs)
-
-            if not os.path.exists(path):
-                result = func(*args, **kwargs)
-                with open(path, 'wb+') as f:
-                    pickle.dump(result, f)
-            else:
-                with open(path, 'rb') as f:
-                    result = pickle.load(f)
-
-            return result
-        return inner
-    return wrapper
+repo_cache_path = "repositories.pickle"
+readme_cache_path = "readme_{}.pickle"
 
 
 @dataclass
@@ -136,6 +107,8 @@ class Repository:
     open_issues: int
     watchers: int
     default_branch: str
+    network_count: int = 0
+    subscribers_count: int = 0
 
 
 def dict_to_user(d: dict) -> User:
@@ -143,18 +116,37 @@ def dict_to_user(d: dict) -> User:
 
 
 def dict_to_repository(d: dict) -> Repository:
-    d['owner'] = dict_to_user(d['owner'])
+    if 'owner' in d:
+        d['owner'] = dict_to_user(d['owner'])
     return Repository(**d)
 
 
 @cache(repo_cache_path)
 def get_repositories() -> List[Repository]:
     r = requests.get(f"https://api.github.com/users/{GITHUB_USERNAME}")
+    if not r.ok:
+        report_error(r)
+        return None
+
     data = r.json()
     r = requests.get(data['repos_url'])
+    if not r.ok:
+        report_error(r)
+        return None
+
     data = r.json()
 
     return list(map(dict_to_repository, data))
+
+
+def get_repository(name: str) -> Repository:
+    r = requests.get(f"https://api.github.com/repos/{GITHUB_USERNAME}/{name}")
+    if not r.ok:
+        report_error(r)
+        return None
+
+    data = r.json()
+    return dict_to_repository(data)
 
 
 def _get_readme_cache_path(repo: Repository):
@@ -165,8 +157,13 @@ def _get_readme_cache_path(repo: Repository):
 def get_readme(repo: Repository) -> Optional[str]:
     r = requests.get(f"{repo.url}/readme")
     if not r.ok:
+        report_error(r)
         return None
 
     data = r.json()
     r = requests.get(data['download_url'])
     return r.text
+
+
+def get_resource_url(name: str, resource: str) -> str:
+    return f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{name}/master/{resource}"

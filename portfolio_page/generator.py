@@ -1,74 +1,23 @@
+import os
 from typing import List, Optional
 from dataclasses import dataclass
 from flask import render_template, render_template_string, Markup
 
 from . import github_api
+from .helper import cache
+from .markdown_renderer import render_markdown
 
 
 @dataclass
 class Project:
     title: str
+    url: str
     short_description: Markup = Markup("")
-
-
-def render_images(line):
-    result = ""
-    while "![" in line:
-        start_index = line.find("![")
-        before = line[:start_index]
-        line = line[start_index + 2:]
-
-        name_end = line.find(']')
-        title = line[:name_end]
-        line = line[name_end + 2:]
-
-        url_end = line.find(")")
-        url = line[:url_end]
-        line = line[url_end + 1:]
-
-        image = render_template_string(
-            "<img src=\"{{ url }}\" title=\"{{ title }}\"/>", url=url, title=title)
-        result += before + image
-
-    result += line
-    return result
-
-
-def render_links(line):
-    result = ""
-    while "[" in line:
-        start_index = line.find("[")
-        before = line[:start_index]
-        line = line[start_index + 1:]
-
-        content_end = line.find('](')
-        content = Markup(line[:content_end])
-        line = line[content_end + 2:]
-
-        url_end = line.find(')')
-        url = line[:url_end]
-        line = line[url_end + 1:]
-
-        link = render_template_string(
-            "<a href=\"{{ url }}\">{{ content }}</a>", url=url, content=content)
-        result += before + link
-    result += line
-    return result
-
-
-def render_tables(lines: List[str]):
-    return lines
-
-
-def render_markdown(lines: str) -> Markup:
-    result = list(map(render_links, map(render_images, lines)))
-    result = render_tables(result)
-    return Markup("<br>".join(result))
 
 
 def create_project(repo: github_api.Repository) -> Project:
     readme = github_api.get_readme(repo)
-    project = Project(repo.name)
+    project = Project(repo.name, repo.name)
     if readme is None:
         project.short_description = Markup("No README available")
         return project
@@ -83,7 +32,7 @@ def create_project(repo: github_api.Repository) -> Project:
             continue
         result.append(line)
 
-    project.short_description = render_markdown(result)
+    project.short_description = render_markdown(result, repo.name)
     return project
 
 
@@ -92,8 +41,11 @@ def remove_forks(repo: github_api.Repository) -> bool:
 
 
 def create_landing_page():
-    repos = list(filter(remove_forks, github_api.get_repositories()))
+    repos = github_api.get_repositories()
+    if repos is None:
+        return render_template('error.html')
 
+    repos = list(filter(remove_forks, repos))
     projects = list(map(create_project, repos))
     context = {'projects': projects}
     return render_template('index.html', **context)
@@ -106,4 +58,20 @@ def generate_project_pages():
 
 
 def generate_project_page(repo: github_api.Repository):
-    pass
+    readme = github_api.get_readme(repo)
+    if readme is None:
+        return "No README available"
+
+    project = create_project(repo)
+    readme_rendered = render_markdown(readme.split("\n"), repo.name)
+    context = {'readme': readme_rendered, 'project': project}
+    return render_template("project.html", **context)
+
+
+def _get_project_cache_name(name: str):
+    return f"{name}.html"
+
+
+def create_project_page(name: str) -> str:
+    repo = github_api.get_repository(name)
+    return generate_project_page(repo)
