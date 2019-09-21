@@ -1,11 +1,10 @@
 import os
 from typing import List, Optional
 from dataclasses import dataclass
-from flask import render_template, render_template_string, Markup
+from flask import render_template, Markup
 
 from . import github_api
-from .helper import cache
-from .markdown_renderer import render_markdown
+from .markdown_renderer import render_markdown, render_short_description
 
 
 @dataclass
@@ -32,7 +31,7 @@ def create_project(repo: github_api.Repository) -> Project:
             continue
         result.append(line)
 
-    project.short_description = render_markdown(result, repo.name)
+    project.short_description = render_short_description(result, repo.name)
     return project
 
 

@@ -12,9 +12,7 @@
             {% for project in projects %}
             <div class="card" onclick="window.location = '{{ project.url }}';">
                 <h1 class="card-title">{{ project.title }}</h1>
-                <p class="card-content">
-                    {{ project.short_description }}
-                </p>
+                {{ project.short_description }}
             </div>
             {% endfor %}
         </div>

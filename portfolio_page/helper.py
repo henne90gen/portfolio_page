@@ -12,10 +12,9 @@ def returns_str(func):
 
 
 def persist_result(func, path, result):
-    if result is None:
-        return
-
     if returns_str(func):
+        if result is None:
+            return
         with open(path, 'w+') as f:
             f.write(str(result))
     else:
