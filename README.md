@@ -18,5 +18,6 @@ Finally a landing page is generated, which contains an overview of all the repos
     -   add screenshots
 -   landing page
     -   add hover effects to cards
-    -   add links to project pages
+    -   add colored background to title of cards
+    -   make page background white or almost white
     -   fix multi line titles (see jExamChecker)
