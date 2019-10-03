@@ -18,7 +18,7 @@ def create_project(repo: github_api.Repository) -> Project:
     readme = github_api.get_readme(repo)
     project = Project(repo.name, repo.name)
     if readme is None:
-        project.short_description = Markup("No README available")
+        project.short_description = Markup("<p class=\"card-content\">No README available</p>")
         return project
 
     lines = readme.split("\n")
@@ -45,7 +45,7 @@ def create_landing_page():
         return render_template('error.html')
 
     repos = list(filter(remove_forks, repos))
-    projects = list(map(create_project, repos))
+    projects = list(sorted(map(create_project, repos), key=lambda p: p.url))
     context = {'projects': projects}
     return render_template('index.html', **context)
 

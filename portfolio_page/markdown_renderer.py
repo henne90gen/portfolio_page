@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from flask import escape, render_template_string, Markup
+from flask import render_template_string, Markup
 
 
 @dataclass
@@ -33,7 +33,7 @@ def add_css_class(tag: str, cls: str):
 def render_short_description(content: List[str], path_prefix: str):
     result = render_tree_content(content, path_prefix, 0)
     result = list(map(add_css_class("p", "card-content"), result))
-    return Markup("<br/>\n".join(result))
+    return Markup("\n".join(result))
 
 
 def create_relative_url(url: str, path_prefix: str):
@@ -114,8 +114,6 @@ def render_tables(lines: List[str]):
 
 
 def build_tree(lines: List[str]) -> Optional[Node]:
-    print(lines)
-
     root = Node()
     current_parent = root
     current_level = 0
@@ -159,24 +157,15 @@ def render_tree_content(content: List[str], path_prefix: str, level: int) -> Lis
         indentation = "  " * (level + 1)
         return f"{indentation}{line}<br/>"
 
-    def p(name):
-        def inner(line):
-            print(name, line)
-            return line
-
-        return inner
-
-    result = []
-    lines = content
+    lines: List[str] = content
     lines = filter(lambda l: l.strip() != "", lines)
-    lines = map(escape, lines)
-    lines = map(str, lines)
     lines = map(render_relative_images(path_prefix), lines)
     lines = map(render_relative_links(path_prefix), lines)
     lines = map(indent_and_line_break, lines)
-    lines = list(lines)
+    lines: List[str] = list(lines)
 
     lines = render_tables(lines)
+    result = []
     if lines:
         result.append("  " * level + "<p>")
         result += lines
