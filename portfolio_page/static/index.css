@@ -1,19 +1,41 @@
+/*
+https://material.io/resources/color/#!/?view.left=0&view.right=0&primary.color=FFB300&secondary.color=64DD17
+
+Primary color (light orange):
+    base: #ffb300
+    light: #ffe54c
+    dark: #c68400
+
+Secondary color (light green):
+    base: #64dd17
+    light: #9cff57
+    dark: #1faa00
+
+*/
+
 body {
     margin: 0;
     padding: 0;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .card-container {
     width: 100%;
     padding-top: 15px;
     padding-bottom: 15px;
-    background-color: yellow;
+    background-color: #9cff57;
     display: grid;
-    grid-template-columns: 550px 550px;
+    grid-template-columns: 550px 550px 550px;
     grid-auto-rows: auto;
-    grid-column: 15px;
-    grid-row-gap: 15px;
+    grid-column-gap: 20px;
+    grid-row-gap: 50px;
     justify-content: space-evenly;
+}
+
+@media (max-width: 1700px) {
+    .card-container {
+        grid-template-columns: 550px 550px;
+    }
 }
 
 @media (max-width: 1150px) {
@@ -26,18 +48,19 @@ body {
     box-sizing: border-box;
     width: 100%;
     height: 400px;
-    padding: 30px;
-    background-color: green;
+    background-color: #ffffff;
     box-shadow: 10px 10px 1px gray;
     border-radius: 10px;
     cursor: pointer;
 
     /* this is needed for the gradient inside the card-content to work */
     position: relative;
+
+    transition: all .2s ease-in-out;
 }
 
 .card:hover {
-    z-index: 10;
+    transform: scale(1.05);
 }
 
 @media (max-width: 585px) {
@@ -46,10 +69,23 @@ body {
     }
 }
 
+.card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    padding: 30px;
+    background-color: #ffb300;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+
+}
+
 .card-content {
     overflow: hidden;
     text-align: justify;
     height: 280px;
+    padding: 0 30px;
 }
 
 .card-content::before {
@@ -60,11 +96,6 @@ body {
     left: 0;
     top: 0;
     pointer-events: none;
-    background: linear-gradient(transparent 200px, green);
+    background: linear-gradient(transparent 200px, #ffffff);
     border-radius: 10px;
-}
-
-.card-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
