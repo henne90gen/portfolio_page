@@ -30,7 +30,7 @@ body {
     display: flex;
     flex-direction: column;
     margin-top: 100px;
-    margin-bottom: 100px;
+    margin-bottom: 20px;
 }
 
 .profile-picture {
@@ -52,9 +52,9 @@ body {
 .card-container {
     flex: 1;
     width: 100%;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    background-color: #9cff57;
+    padding-top: 100px;
+    padding-bottom: 50px;
+    background: linear-gradient(white, #FFFEBD 600px);
     display: grid;
     grid-template-columns: 550px 550px 550px;
     grid-auto-rows: auto;
