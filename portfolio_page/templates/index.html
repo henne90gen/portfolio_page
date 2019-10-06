@@ -1,21 +1,44 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Hendrik Müller - Portfolio</title>
-        <meta charset="UTF-8" />
-        <meta name="author" content="Hendrik Müller" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/static/index.css" />
-    </head>
-    <body style="display: flex">
-        <div class="card-container">
-            {% for project in projects %}
-            <div class="card" onclick="window.location = '{{ project.url }}';">
-                <h1 class="card-title">{{ project.title }}</h1>
-                {{ project.short_description }}
-            </div>
-            {% endfor %}
+<html lang="en">
+
+<head>
+    <title>Hendrik Müller - Portfolio</title>
+    <meta charset="UTF-8"/>
+    <meta name="author" content="Hendrik Müller"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/index.css"/>
+</head>
+
+<body>
+<div class="profile-container">
+    <img class="profile-picture" src="/static/profile_picture.jpg" alt="Profile Picture" width="200px"/>
+    <h1 class="profile-title">Hendrik Müller</h1>
+    <p class="profile-text">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque vel aliquam neque. Integer ultricies
+        blandit justo, quis dictum ligula. Suspendisse potenti. In imperdiet tellus aliquam sapien commodo interdum. Ut
+        fringilla iaculis augue sed commodo. Suspendisse eu ante vel ante laoreet tempus id a erat. Proin fermentum
+        feugiat dolor, eget accumsan magna. Etiam ac dui sed eros gravida condimentum. Etiam dignissim urna nec
+        imperdiet tristique. Cras tempus suscipit neque, eget fermentum nibh molestie id. Praesent efficitur odio quis
+        urna maximus, laoreet pretium lacus egestas. Nulla sit amet dolor in elit sollicitudin pulvinar.
+
+        Quisque condimentum odio a fringilla eleifend. Integer volutpat lacus tellus, non pellentesque sem rutrum quis.
+        Quisque venenatis malesuada sapien eu pellentesque. Vivamus sed sapien id tortor dignissim sodales vitae ac
+        erat. In vel iaculis velit. Suspendisse potenti. Fusce vulputate enim ut vulputate pellentesque. Integer arcu
+        dui, porttitor ut dignissim vitae, finibus in mauris. Sed justo lacus, auctor a posuere sed, mollis sit amet
+        erat. Sed aliquam cursus lacinia. Praesent porta eu tellus eu posuere. Pellentesque rhoncus, orci in consectetur
+        placerat, lacus eros varius mi, in pellentesque erat turpis id dolor. Mauris vitae dolor in enim molestie
+        viverra quis non velit.
+    </p>
+</div>
+<div class="card-container">
+    {% for project in projects %}
+        <div class="card" onclick="window.location = '{{ project.url }}';">
+            <h1 class="card-title">{{ project.title }}</h1>
+            {{ project.short_description }}
         </div>
-    </body>
+    {% endfor %}
+</div>
+</body>
+
 </html>
