@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Iterator
 
 from flask import render_template_string, Markup
 
@@ -32,7 +32,7 @@ def add_css_class(tag: str, cls: str):
 
 def render_short_description(content: List[str], path_prefix: str):
     result = render_tree_content(content, path_prefix, 0)
-    result = list(map(add_css_class("p", "card-content"), result))
+    result = list(map(add_css_class("div", "card-content"), result))
     return Markup("\n".join(result))
 
 
@@ -109,8 +109,30 @@ def render_heading(line: str):
     return f"<h{heading_num} id=\"{heading_id}\">{heading_text}{heading_link}</h{heading_num}>"
 
 
-def render_tables(lines: List[str]):
+def render_tables(lines: List[str]) -> List[str]:
     return lines
+
+
+def render_code(lines: List[str], level: int) -> List[str]:
+    is_in_code_block = False
+    result = []
+    for line in lines:
+        if "```" in line:
+            if is_in_code_block:
+                result.append("  " * level + "</div>")
+            else:
+                result.append("  " * level + "<div class=\"code-block\">")
+            is_in_code_block = not is_in_code_block
+        else:
+            # indent = ""
+            # if is_in_code_block:
+            #     indent = "  " * (level + 1)
+            new_line = line
+            if "<br/>" not in line:
+                new_line += "<br/>"
+            result.append(new_line)
+
+    return result
 
 
 def build_tree(lines: List[str]) -> Optional[Node]:
@@ -157,7 +179,7 @@ def render_tree_content(content: List[str], path_prefix: str, level: int) -> Lis
         indentation = "  " * (level + 1)
         return f"{indentation}{line}<br/>"
 
-    lines: List[str] = content
+    lines: Iterator[str] = content
     lines = filter(lambda l: l.strip() != "", lines)
     lines = map(render_relative_images(path_prefix), lines)
     lines = map(render_relative_links(path_prefix), lines)
@@ -165,11 +187,13 @@ def render_tree_content(content: List[str], path_prefix: str, level: int) -> Lis
     lines: List[str] = list(lines)
 
     lines = render_tables(lines)
+    lines = render_code(lines, level + 1)
+
     result = []
     if lines:
-        result.append("  " * level + "<p>")
+        result.append("  " * level + "<div>")
         result += lines
-        result.append("  " * level + "</p>")
+        result.append("  " * level + "</div>")
 
     return result
 

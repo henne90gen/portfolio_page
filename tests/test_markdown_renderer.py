@@ -3,7 +3,7 @@ from flask import Flask
 
 import portfolio_page
 from portfolio_page.markdown_renderer import render_relative_images, render_relative_links, render_heading, render_tree, \
-    build_tree, Node, add_css_class, render_short_description
+    build_tree, Node, add_css_class, render_short_description, render_code
 
 
 def render_simple_heading(line: str) -> str:
@@ -29,10 +29,27 @@ def test_can_render_short_description(app: Flask):
         "[![Build Status](https://travis-ci.org/henne90gen/pixel_sorting.svg?branch=master)](https://travis-ci.org/henne90gen/pixel_sorting)",
         "[![Coverage Status](https://coveralls.io/repos/github/henne90gen/pixel_sorting/badge.svg?branch=master)](https://coveralls.io/github/henne90gen/pixel_sorting?branch=master)"
     ]
-    expected = """<p class="card-content"><br/>
-  <a href="https://travis-ci.org/henne90gen/pixel_sorting"><img src="https://travis-ci.org/henne90gen/pixel_sorting.svg?branch=master" title="Build Status"/></a><br/><br/>
-  <a href="https://coveralls.io/github/henne90gen/pixel_sorting?branch=master"><img src="https://coveralls.io/repos/github/henne90gen/pixel_sorting/badge.svg?branch=master" title="Coverage Status"/></a><br/><br/>
-</p>"""
+    expected = """<div class="card-content">
+  <a href="https://travis-ci.org/henne90gen/pixel_sorting"><img src="https://travis-ci.org/henne90gen/pixel_sorting.svg?branch=master" title="Build Status"/></a><br/>
+  <a href="https://coveralls.io/github/henne90gen/pixel_sorting?branch=master"><img src="https://coveralls.io/repos/github/henne90gen/pixel_sorting/badge.svg?branch=master" title="Coverage Status"/></a><br/>
+</div>"""
+
+    with app.app_context():
+        actual = str(render_short_description(lines, ""))
+    assert actual == expected
+
+
+def test_can_render_short_description_with_code(app: Flask):
+    lines = [
+        "```bash",
+        "make install",
+        "```"
+    ]
+    expected = """<div class="card-content">
+  <div class="code-block">
+  make install<br/>
+  </div>
+</div>"""
 
     with app.app_context():
         actual = str(render_short_description(lines, ""))
@@ -83,17 +100,24 @@ def test_can_render_image_and_links(app: Flask):
 def test_can_render_headings(app: Flask):
     for index in range(1, 6):
         line = ("#" * index) + " Title"
-        with app.app_context():
-            result = render_heading(line)
-            assert result == f"<h{index} id=\"title\">Title<a class=\"headerlink\" href=\"#title\" title=\"Permalink to this headline\">¶</a></h{index}>"
+        result = render_heading(line)
+        assert result == f"<h{index} id=\"title\">Title<a class=\"headerlink\" href=\"#title\" title=\"Permalink to this headline\">¶</a></h{index}>"
 
 
-def test_can_render_headings_with_spaces(app: Flask):
+def test_can_render_headings_with_spaces():
     for index in range(1, 6):
         line = ("#" * index) + " Title with Spaces"
-        with app.app_context():
-            result = render_heading(line)
-            assert result == f"<h{index} id=\"title-with-spaces\">Title with Spaces<a class=\"headerlink\" href=\"#title-with-spaces\" title=\"Permalink to this headline\">¶</a></h{index}>"
+        result = render_heading(line)
+        assert result == f"<h{index} id=\"title-with-spaces\">Title with Spaces<a class=\"headerlink\" href=\"#title-with-spaces\" title=\"Permalink to this headline\">¶</a></h{index}>"
+
+
+def test_can_render_code_blocks():
+    lines = ["```bash", "make install", "```"]
+    expected = ["<div class=\"code-block\">", "make install<br/>", "</div>"]
+    actual = render_code(lines, 0)
+    assert len(actual) == len(expected)
+    for a, e in zip(actual, expected):
+        assert a == e
 
 
 def compare_trees(expected: Node, actual: Node):
@@ -163,7 +187,7 @@ This is chapter 3
     compare_trees(expected_root, root)
 
 
-def test_can_build_tree_with_links_images_and_tables():
+def test_can_build_tree_with_links_images_tables_and_code():
     text = """# Title
 
 This is the introduction to the project
@@ -178,6 +202,12 @@ This is the introduction to the project
 ## Title 2
 
 [My Link](https://google.de)
+
+## Title 3
+
+```bash
+make install
+```
 """
     root = build_tree(text.split('\n'))
     expected_root = Node(
@@ -191,7 +221,8 @@ This is the introduction to the project
                     "| -------- | -------- |",
                     "| row 1.1  | row 1.2  |"
                 ])]),
-                Node(["## Title 2"], [Node(["[My Link](https://google.de)"])])
+                Node(["## Title 2"], [Node(["[My Link](https://google.de)"])]),
+                Node(["## Title 3"], [Node(["```bash", "make install", "```"])])
             ])
         ])
     compare_trees(expected_root, root)
@@ -210,20 +241,20 @@ def test_can_render_tree():
         "<div class=\"markdown-document\">",
         "  <h1>Title</h1>",
         "  <div>",
-        "    <p>",
+        "    <div>",
         "      This is the introduction to the project<br/>",
-        "    </p>",
+        "    </div>",
         "    <h2>Title 1</h2>",
         "    <div>",
-        "      <p>",
+        "      <div>",
         "        This is chapter 1<br/>",
-        "      </p>",
+        "      </div>",
         "    </div>",
         "    <h2>Title 2</h2>",
         "    <div>",
-        "      <p>",
+        "      <div>",
         "        This is chapter 2<br/>",
-        "      </p>",
+        "      </div>",
         "    </div>",
         "  </div>",
         "</div>"
@@ -247,9 +278,9 @@ def test_can_render_tree_with_html():
         "<div class=\"markdown-document\">",
         "  <h1>Title</h1>",
         "  <div>",
-        "    <p>",
-        "      &lt;my-tag&gt;&lt;/my-tag&gt;<br/>",
-        "    </p>",
+        "    <div>",
+        "      <my-tag></my-tag><br/>",
+        "    </div>",
         "  </div>",
         "</div>"
     ]
