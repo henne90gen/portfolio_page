@@ -18,7 +18,7 @@ def create_project(repo: github_api.Repository) -> Project:
     readme = github_api.get_readme(repo)
     project = Project(repo.name, repo.name)
     if readme is None:
-        project.short_description = Markup("<p class=\"card-content\">No README available</p>")
+        project.short_description = Markup("<div class=\"card-content\">No README available</div>")
         return project
 
     lines = readme.split("\n")
