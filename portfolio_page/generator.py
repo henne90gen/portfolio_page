@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from flask import render_template, Markup
 
 from . import github_api
-from .markdown_renderer import render_markdown, render_short_description
+from .markdown_renderer import render_short_description
 
 
 @dataclass
@@ -56,14 +56,33 @@ def generate_project_pages():
         generate_project_page(repo)
 
 
+def correct_relative_links(html: str, path_prefix: str) -> str:
+    if not path_prefix.endswith("/"):
+        path_prefix += "/"
+
+    def correct(text: str, url_attribute: str) -> str:
+        url_attribute = url_attribute + "=\""
+        attribute_size = len(url_attribute)
+        index = text.find(url_attribute)
+        while index != -1:
+            if text[index + attribute_size:index + attribute_size + 4] != "http":
+                text = text[:index + attribute_size] + path_prefix + text[index + attribute_size:]
+            index = text.find(url_attribute, index + attribute_size)
+        return text
+
+    html = correct(html, "src")
+    html = correct(html, "href")
+    return html
+
+
 def generate_project_page(repo: github_api.Repository):
-    readme = github_api.get_readme(repo)
+    readme = github_api.get_readme_html(repo)
     if readme is None:
         return "No README available"
 
+    readme = correct_relative_links(readme, repo.name)
     project = create_project(repo)
-    readme_rendered = render_markdown(readme.split("\n"), repo.name)
-    context = {'readme': readme_rendered, 'project': project}
+    context = {'readme': Markup(readme), 'project': project}
     return render_template("project.html", **context)
 
 

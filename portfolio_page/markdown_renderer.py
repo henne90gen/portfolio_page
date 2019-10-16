@@ -124,9 +124,6 @@ def render_code(lines: List[str], level: int) -> List[str]:
                 result.append("  " * level + "<div class=\"code-block\">")
             is_in_code_block = not is_in_code_block
         else:
-            # indent = ""
-            # if is_in_code_block:
-            #     indent = "  " * (level + 1)
             new_line = line
             if "<br/>" not in line:
                 new_line += "<br/>"
@@ -196,21 +193,3 @@ def render_tree_content(content: List[str], path_prefix: str, level: int) -> Lis
         result.append("  " * level + "</div>")
 
     return result
-
-
-def render_tree(root: Node, path_prefix: str = "", level: int = 0) -> [str]:
-    result = render_tree_content(root.content, path_prefix, level)
-
-    if root.children:
-        cls = " class=\"markdown-document\"" if level == 0 else ""
-        result.append("  " * level + f"<div{cls}>")
-        for child in root.children:
-            result += render_tree(child, path_prefix, level + 1)
-        result.append("  " * level + "</div>")
-
-    return result
-
-
-def render_markdown(lines: List[str], path_prefix: str = "") -> Markup:
-    root = build_tree(lines)
-    return Markup("\n".join(render_tree(root, path_prefix)))

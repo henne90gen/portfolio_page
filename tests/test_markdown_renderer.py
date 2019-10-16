@@ -2,8 +2,8 @@ import pytest
 from flask import Flask
 
 import portfolio_page
-from portfolio_page.markdown_renderer import render_relative_images, render_relative_links, render_heading, render_tree, \
-    build_tree, Node, add_css_class, render_short_description, render_code
+from portfolio_page.markdown_renderer import render_relative_images, render_relative_links, render_heading, build_tree, \
+    Node, add_css_class, render_short_description, render_code
 
 
 def render_simple_heading(line: str) -> str:
@@ -226,67 +226,3 @@ make install
             ])
         ])
     compare_trees(expected_root, root)
-
-
-def test_can_render_tree():
-    root = Node(
-        [], [
-            Node(["# Title"], [
-                Node(["This is the introduction to the project"]),
-                Node(["## Title 1"], [Node(["This is chapter 1"])]),
-                Node(["## Title 2"], [Node(["This is chapter 2"])]),
-            ])
-        ])
-    expected_html = [
-        "<div class=\"markdown-document\">",
-        "  <h1>Title</h1>",
-        "  <div>",
-        "    <div>",
-        "      This is the introduction to the project<br/>",
-        "    </div>",
-        "    <h2>Title 1</h2>",
-        "    <div>",
-        "      <div>",
-        "        This is chapter 1<br/>",
-        "      </div>",
-        "    </div>",
-        "    <h2>Title 2</h2>",
-        "    <div>",
-        "      <div>",
-        "        This is chapter 2<br/>",
-        "      </div>",
-        "    </div>",
-        "  </div>",
-        "</div>"
-    ]
-    portfolio_page.markdown_renderer.render_heading = render_simple_heading
-    result = render_tree(root)
-    assert result is not None
-    assert len(result) == len(expected_html)
-    for expected_line, actual_line in zip(expected_html, result):
-        assert actual_line == expected_line
-
-
-def test_can_render_tree_with_html():
-    root = Node(
-        [], [
-            Node(["# Title"], [
-                Node(["<my-tag></my-tag>"]),
-            ])
-        ])
-    expected_html = [
-        "<div class=\"markdown-document\">",
-        "  <h1>Title</h1>",
-        "  <div>",
-        "    <div>",
-        "      <my-tag></my-tag><br/>",
-        "    </div>",
-        "  </div>",
-        "</div>"
-    ]
-    portfolio_page.markdown_renderer.render_heading = render_simple_heading
-    result = render_tree(root)
-    assert result is not None
-    assert len(result) == len(expected_html)
-    for expected_line, actual_line in zip(expected_html, result):
-        assert actual_line == expected_line

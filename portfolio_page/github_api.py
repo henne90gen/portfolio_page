@@ -1,13 +1,15 @@
-import requests
-import typing
-from typing import List, Optional
+import base64
 from dataclasses import dataclass
+from typing import List, Optional
+
+import requests
 
 from .helper import cache, report_error
 
 GITHUB_USERNAME = "henne90gen"
 repo_cache_path = "repositories.pickle"
 readme_cache_path = "readme_{}.pickle"
+readme_html_cache_path = "readme_html_{}.pickle"
 
 
 @dataclass
@@ -126,20 +128,20 @@ def get_repositories() -> List[Repository]:
     r = requests.get(f"https://api.github.com/users/{GITHUB_USERNAME}")
     if not r.ok:
         report_error(r)
-        return None
+        return []
 
     data = r.json()
     r = requests.get(data['repos_url'])
     if not r.ok:
         report_error(r)
-        return None
+        return []
 
     data = r.json()
 
     return list(map(dict_to_repository, data))
 
 
-def get_repository(name: str) -> Repository:
+def get_repository(name: str) -> Optional[Repository]:
     r = requests.get(f"https://api.github.com/repos/{GITHUB_USERNAME}/{name}")
     if not r.ok:
         report_error(r)
@@ -147,6 +149,20 @@ def get_repository(name: str) -> Repository:
 
     data = r.json()
     return dict_to_repository(data)
+
+
+def _get_readme_html_cache_path(repo: Repository):
+    return readme_html_cache_path.format(repo.name)
+
+
+@cache(_get_readme_html_cache_path)
+def get_readme_html(repo: Repository) -> Optional[str]:
+    r = requests.get(f"{repo.url}/readme", headers={'Accept': 'application/vnd.github.v3.html'}, )
+    if not r.ok:
+        report_error(r)
+        return None
+
+    return r.text
 
 
 def _get_readme_cache_path(repo: Repository):
@@ -161,8 +177,7 @@ def get_readme(repo: Repository) -> Optional[str]:
         return None
 
     data = r.json()
-    r = requests.get(data['download_url'])
-    return r.text
+    return base64.standard_b64decode(data['content'].encode("utf-8")).decode("utf-8")
 
 
 def get_resource_url(name: str, resource: str) -> str:
