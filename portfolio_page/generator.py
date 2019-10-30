@@ -65,8 +65,18 @@ def correct_relative_links(html: str, path_prefix: str) -> str:
         attribute_size = len(url_attribute)
         index = text.find(url_attribute)
         while index != -1:
-            if text[index + attribute_size:index + attribute_size + 4] != "http":
-                text = text[:index + attribute_size] + path_prefix + text[index + attribute_size:]
+            is_internal_page_link = text[index + attribute_size] == "#"
+            is_absolute_link = text[index + attribute_size:index + attribute_size + 4] == "http"
+            if not is_absolute_link and not is_internal_page_link:
+                first_part = text[:index + attribute_size]
+                last_part = text[index + attribute_size:]
+                text = first_part + path_prefix + last_part
+
+            if is_internal_page_link:
+                first_part = text[:index + attribute_size]
+                last_part = text[index + attribute_size + 1:]
+                text = first_part + "#user-content-" + last_part
+
             index = text.find(url_attribute, index + attribute_size)
         return text
 
