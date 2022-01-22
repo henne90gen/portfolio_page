@@ -1,6 +1,5 @@
-import os
-from typing import List, Optional
 from dataclasses import dataclass
+
 from flask import render_template, Markup
 
 from . import github_api
